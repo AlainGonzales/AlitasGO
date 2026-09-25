@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="AlitasGo.Domain/AlitasGo.Domain.csproj" />
+  <Project Path="AlitasGo.Repository/AlitasGo.Repository.csproj" />
+  <Project Path="AlitasGo.Service/AlitasGo.Service.csproj" />
+  <Project Path="AlitasGo.Web/AlitasGo.Web.csproj" />
+</Solution>
