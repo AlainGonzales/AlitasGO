@@ -480,3 +480,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Nuevos índices y bases locales de Visual Studio / slnx
+*.vsidx
+slnx.sqlite
+VSWorkspaceState.json
