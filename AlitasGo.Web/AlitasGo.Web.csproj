@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AlitasGo.Domain\AlitasGo.Domain.csproj" />
+    <ProjectReference Include="..\AlitasGo.Repository\AlitasGo.Repository.csproj" />
     <ProjectReference Include="..\AlitasGo.Service\AlitasGo.Service.csproj" />
   </ItemGroup>
 

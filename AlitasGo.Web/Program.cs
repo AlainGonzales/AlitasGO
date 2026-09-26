@@ -1,4 +1,16 @@
+using AlitasGo.Domain.Interfaces;
+using AlitasGo.Repository;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Base de Datos (EF Core + SQL Server / LocalDB) ───────────────────────────
+builder.Services.AddDbContext<AlitasGoDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("AlitasGoDb")));
+
+// ── Repositorios ─────────────────────────────────────────────────────────────
+builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
+builder.Services.AddScoped<IInsumoRepository, InsumoRepository>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
