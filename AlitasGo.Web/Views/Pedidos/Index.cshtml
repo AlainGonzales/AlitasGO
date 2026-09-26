@@ -1,0 +1,27 @@
+﻿@model IEnumerable<PedidoResumenDto>
+@using AlitasGo.Domain.DTOs;
+
+<h2>Pedidos</h2>
+<a href="/Pedidos/Registrar" class="btn btn-primary">Nuevo Pedido</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Mesa</th>
+            <th>Estado</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var pedido in Model ?? Enumerable.Empty<PedidoResumenDto>())
+        {
+            <tr>
+                <td>@pedido.PedidoId</td>
+                <td>@pedido.NumeroMesa</td>
+                <td>@pedido.Estado</td>
+                <td>@pedido.TotalPagar</td>
+            </tr>
+        }
+    </tbody>
+</table>

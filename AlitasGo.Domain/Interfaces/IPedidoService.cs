@@ -4,9 +4,9 @@ namespace AlitasGo.Domain.Interfaces
 {
     public interface IPedidoService
     {
-        Task<PedidoResumenDto> IniciarYRegistrarPedidoAsync(CrearPedidoDto dto);
+        Task<PedidoResumenDto> InitiarYRegistrarPedidoAsync(CrearPedidoDto dto);
         Task<bool> CambiarEstadoPedidoAsync(int pedidoId, string nuevoEstado);
-        Task<IEnumerable<PedidoResumenDto>> ObtenerComandasCocinaAsync();
+        Task<IEnumerable<PedidoResumenDto>> ObtenerComandasCoocinaAsync();
         Task<PedidoResumenDto?> ObtenerDetallePedidoAsync(int pedidoId);
     }
 }
