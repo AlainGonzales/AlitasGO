@@ -1,0 +1,176 @@
+﻿@{
+    ViewData["Title"] = "Pedidos Salón";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">🍗 AlitasGo - Salón</h2>
+        <span class="badge bg-secondary fs-6">Turno Actual</span>
+    </div>
+
+
+    <!-- SECCIÓN EXTERIOR -->
+    <div class="mb-5">
+        <h3 class="fw-bold text-secondary border-bottom pb-2 mb-4">☀️ Mesas Exteriores </h3>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-2">
+            @for (int i = 1; i <= 5; i++)
+            {
+                string colorFondo = (i % 2 == 0) ? "bg-danger" : "bg-success";
+                string colorTexto = (i % 2 == 0) ? "text-danger" : "text-success";
+                string estadoMesa = (i % 2 == 0) ? "Ocupada" : "Libre";
+                string icono = (i % 2 == 0) ? "🍽️" : "🪑";
+
+                <div class="col mb-3">
+                    <div class="card shadow-sm border-0 h-100 card-mesa">
+                        <div class="card-body text-center @colorFondo text-white rounded position-relative p-3">
+                            <span class="position-absolute top-0 end-0 m-2 badge bg-light @colorTexto rounded-pill" style="font-size: 0.65rem;">
+                                @estadoMesa
+                            </span>
+                            <div class="fs-3 mb-1 mt-2">@icono</div>
+                            <h6 class="card-title fw-bold mb-0">Mesa @i</h6>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- SECCIÓN INTERIOR -->
+    <div class="mb-5">
+        <h3 class="fw-bold text-secondary border-bottom pb-2 mb-4">🏠 Mesas Interiores</h3>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-2">
+            @for (int i = 6; i <= 10; i++)
+            {
+                string colorFondo = (i % 2 == 0) ? "bg-danger" : "bg-success";
+                string colorTexto = (i % 2 == 0) ? "text-danger" : "text-success";
+                string estadoMesa = (i % 2 == 0) ? "Ocupada" : "Libre";
+                string icono = (i % 2 == 0) ? "🍽️" : "🪑";
+
+                <div class="col mb-3">
+                    <div class="card shadow-sm border-0 h-100 card-mesa">
+                        <!-- Reducimos el padding de p-4 a p-3 -->
+                        <div class="card-body text-center @colorFondo text-white rounded position-relative p-3">
+                            <!-- Hacemos la etiqueta un poco más pequeña -->
+                            <span class="position-absolute top-0 end-0 m-2 badge bg-light @colorTexto rounded-pill" style="font-size: 0.65rem;">
+                                @estadoMesa
+                            </span>
+                            <!-- Reducimos el ícono de fs-1 a fs-3 -->
+                            <div class="fs-3 mb-1 mt-2">@icono</div>
+                            <!-- Reducimos el título de h4 a h6 -->
+                            <h6 class="card-title fw-bold mb-0">Mesa @i</h6>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Botón para abrir Modal de Alitas -->
+    <div class="text-center mb-5">
+        <button type="button" class="btn btn-primary btn-lg shadow px-4 py-3 fw-bold" data-bs-toggle="modal" data-bs-target="#modalAlitas">
+            ➕ Agregar Alitas al Pedido
+        </button>
+    </div>
+
+    <!-- Tabla de Resumen del Pedido -->
+    <div class="card shadow border-0">
+        <div class="card-header bg-dark text-white py-3">
+            <h4 class="mb-0 fw-bold">📋 Resumen del Pedido (Mesa 2)</h4>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Producto</th>
+                        <th>Sabor</th>
+                        <th class="text-center">Cantidad</th>
+                        <th class="text-end">Precio</th>
+                        <th class="text-end pe-4">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="ps-4 fw-bold">🍗 Alitas</td>
+                        <td>BBQ</td>
+                        <td class="text-center">1</td>
+                        <td class="text-end">$150.00</td>
+                        <td class="text-end pe-4">$150.00</td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4 fw-bold">🍗 Alitas</td>
+                        <td>Buffalo</td>
+                        <td class="text-center">2</td>
+                        <td class="text-end">$150.00</td>
+                        <td class="text-end pe-4">$300.00</td>
+                    </tr>
+                </tbody>
+                <tfoot class="table-dark">
+                    <tr>
+                        <th colspan="4" class="text-end fs-5 py-3">Total a Pagar:</th>
+                        <th class="text-end pe-4 fs-5 py-3 text-warning">$450.00</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="card-footer bg-white text-end py-3">
+            <button class="btn btn-success btn-lg px-4 fw-bold shadow-sm">✅ Confirmar Pedido</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Alitas (Bootstrap 5) -->
+<div class="modal fade" id="modalAlitas" tabindex="-1" aria-labelledby="modalAlitasLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title fw-bold" id="modalAlitasLabel">🍗 Seleccionar Alitas</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-secondary">Cantidad de órdenes:</label>
+                        <input type="number" class="form-control form-control-lg text-center" value="1" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-secondary">Elige el sabor:</label>
+                        <div class="list-group" style="max-height: 250px; overflow-y: auto;">
+                            <label class="list-group-item d-flex gap-3 align-items-center">
+                                <input class="form-check-input flex-shrink-0" type="radio" name="sabor" id="bbq" checked>
+                                <span>BBQ Clásicas</span>
+                            </label>
+                            <label class="list-group-item d-flex gap-3 align-items-center">
+                                <input class="form-check-input flex-shrink-0" type="radio" name="sabor" id="buffalo">
+                                <span>Buffalo Picantes</span>
+                            </label>
+                            <label class="list-group-item d-flex gap-3 align-items-center">
+                                <input class="form-check-input flex-shrink-0" type="radio" name="sabor" id="mango">
+                                <span>Mango Habanero</span>
+                            </label>
+                            <label class="list-group-item d-flex gap-3 align-items-center">
+                                <input class="form-check-input flex-shrink-0" type="radio" name="sabor" id="lemon">
+                                <span>Lemon Pepper</span>
+                            </label>
+                            <label class="list-group-item d-flex gap-3 align-items-center">
+                                <input class="form-check-input flex-shrink-0" type="radio" name="sabor" id="honey">
+                                <span>Honey Mustard</span>
+                            </label>
+                            <label class="list-group-item d-flex gap-3 align-items-center">
+                                <input class="form-check-input flex-shrink-0" type="radio" name="sabor" id="parmesan">
+                                <span>Garlic Parmesan</span>
+                            </label>
+                            <label class="list-group-item d-flex gap-3 align-items-center">
+                                <input class="form-check-input flex-shrink-0" type="radio" name="sabor" id="chipotle">
+                                <span>Chipotle BBQ</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary fw-bold">Agregar al Pedido</button>
+            </div>
+        </div>
+    </div>
+</div>
