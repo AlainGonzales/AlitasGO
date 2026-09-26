@@ -23,9 +23,9 @@
         // Método de dominio para recalcular totales
         public void CalcularTotales()
         {
-            TotalPagar = Detalles.Sum(d => d.Importe);
-            SubTotal = Math.Round(TotalPagar / 1.18m, 2);
-            Igv = TotalPagar - SubTotal;
+            SubTotal = Math.Round(Detalles.Sum(d => d.Importe), 2);
+            Igv = Math.Round(SubTotal * 0.18m, 2);
+            TotalPagar = SubTotal + Igv;
         }
     }
 }
