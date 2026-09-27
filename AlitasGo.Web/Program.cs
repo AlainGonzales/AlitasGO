@@ -1,5 +1,6 @@
 using AlitasGo.Domain.Interfaces;
 using AlitasGo.Repository;
+using AlitasGo.Service.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,11 @@ builder.Services.AddDbContext<AlitasGoDbContext>(options =>
 // ── Repositorios ─────────────────────────────────────────────────────────────
 builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
 builder.Services.AddScoped<IInsumoRepository, InsumoRepository>();
+builder.Services.AddScoped<IProductoRepository, ProductoRepository>();
+
+// ── Servicios de Negocio ─────────────────────────────────────────────────────
+builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<IInventarioService, InventarioService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -30,9 +36,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
-
 app.UseAuthorization();
-
 app.MapStaticAssets();
 
 app.MapControllerRoute(
