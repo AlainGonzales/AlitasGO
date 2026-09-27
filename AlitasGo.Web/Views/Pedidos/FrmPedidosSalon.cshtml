@@ -1,0 +1,175 @@
+@model IEnumerable<AlitasGo.Domain.Entities.Mesa>
+@{
+    ViewData["Title"] = "Gestión de Salón y Pedidos";
+}
+
+<div class="container-fluid py-3">
+    <div class="row">
+        <!-- Panel Izquierdo: Mapa de Mesas -->
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-grid-fill me-2"></i>Salón de Mesas</h5>
+                    <div class="small">
+                        <span class="badge bg-success me-2">Libre</span>
+                        <span class="badge bg-danger">Ocupada</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3" id="contenedorMesas">
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var mesa in Model)
+                            {
+                                var claseEstado = mesa.Estado == "Libre" ? "btn-outline-success" : "btn-outline-danger";
+                                var badgeEstado = mesa.Estado == "Libre" ? "bg-success" : "bg-danger";
+                                <div class="col-6 col-sm-4 col-md-3">
+                                    <button type="button" 
+                                            class="btn @claseEstado w-100 p-3 text-center position-relative shadow-sm tarjeta-mesa" 
+                                            onclick="seleccionarMesa(@mesa.MesaId, @mesa.NumeroMesa, '@mesa.Estado')">
+                                        <i class="bi bi-shop fs-1 d-block mb-1"></i>
+                                        <strong>Mesa @mesa.NumeroMesa</strong>
+                                        <div class="small text-muted">Cap: @mesa.Capacidad pers.</div>
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @badgeEstado">
+                                            @mesa.Estado
+                                        </span>
+                                    </button>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="col-12 text-center text-muted py-4">
+                                No hay mesas registradas en el sistema.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel Derecho: Comanda del Pedido Activo -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Comanda Actual</h5>
+                    <span class="badge bg-light text-dark fs-6" id="labelMesaSeleccionada">Mesa: Sin elegir</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <button class="btn btn-warning fw-bold" id="btnAbrirModalItem" onclick="abrirModalAgregar()" disabled>
+                            <i class="bi bi-plus-circle me-1"></i> Agregar Alitas / Item
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="limpiarComanda()">
+                            Limpiar
+                        </button>
+                    </div>
+
+                    <!-- Tabla de Detalle -->
+                    <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+                        <table class="table table-sm align-middle table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Cant</th>
+                                    <th>Descripción / Salsa</th>
+                                    <th class="text-end">P.Unit</th>
+                                    <th class="text-end">Importe</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoTablaPedido">
+                                <tr id="filaVacia">
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        Selecciona una mesa y agrega productos a la comanda.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Totales (Desglose IGV 18%) -->
+                    <div class="border-top pt-3 mt-2">
+                        <div class="d-flex justify-content-between text-muted mb-1">
+                            <span>Subtotal (Base Imponible):</span>
+                            <span id="txtSubTotal">S/. 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted mb-2">
+                            <span>I.G.V. (18%):</span>
+                            <span id="txtIgv">S/. 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between fs-5 fw-bold text-dark border-top pt-2">
+                            <span>Total a Pagar:</span>
+                            <span class="text-success" id="txtTotal">S/. 0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Botón Enviar a Cocina -->
+                    <div class="mt-4">
+                        <button class="btn btn-success w-100 py-2 fs-5 fw-bold shadow-sm" id="btnEnviarComanda" onclick="confirmarYEnviarPedido()" disabled>
+                            <i class="bi bi-fire me-2"></i> Enviar a Cocina
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Seleccionar Producto, Sabor y Cantidad -->
+<div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Detalle de Porción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formAgregarItem">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Porción de Alitas</label>
+                        <select class="form-select" id="selProducto" required>
+                            <option value="1" data-precio="18.00">Alitas x 6 Piezas - S/. 18.00</option>
+                            <option value="2" data-precio="32.00">Alitas x 12 Piezas - S/. 32.00</option>
+                            <option value="3" data-precio="48.00">Alitas x 18 Piezas - S/. 48.00</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Sabor / Salsa</label>
+                        <select class="form-select" id="selSalsa">
+                            <option value="BBQ Clásica">BBQ Clásica</option>
+                            <option value="Buffalo Picante">Buffalo Picante (Hot)</option>
+                            <option value="Acevichada">Acevichada</option>
+                            <option value="Maracuyá">Maracuyá Dulce</option>
+                            <option value="Miel y Mostaza">Honey Mustard</option>
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Cantidad</label>
+                            <input type="number" class="form-control" id="numCantidad" min="1" max="20" value="1" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold">Precio Unitario</label>
+                            <input type="text" class="form-control" id="txtPrecioUnitario" value="S/. 18.00" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Notas para Cocina (opcional)</label>
+                        <input type="text" class="form-control" id="txtNotasCocina" placeholder="Ej: Salsa aparte, bien crujientes">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary fw-bold" onclick="agregarItemAComanda()">Agregar a Comanda</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pedidos-salon.js"></script>
+}

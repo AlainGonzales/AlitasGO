@@ -1,8 +1,10 @@
 ﻿using AlitasGo.Domain.DTOs;
 using AlitasGo.Domain.Interfaces;
+using AlitasGo.Repository;
 using AlitasGo.Web.Hubs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace AlitasGo.Web.Controllers
 {
@@ -96,6 +98,16 @@ namespace AlitasGo.Web.Controllers
         {
             var comandas = await _pedidoService.ObtenerComandasCocinaAsync();
             return View(comandas);
+        }
+
+        // GET: /Pedidos/Salon o /Pedidos/FrmPedidosSalon
+        [HttpGet]
+        [Route("Pedidos/Salon")]
+        [Route("Pedidos/FrmPedidosSalon")]
+        public async Task<IActionResult> FrmPedidosSalon([FromServices] AlitasGoDbContext db)
+        {
+            var mesas = await db.Mesas.AsNoTracking().OrderBy(m => m.NumeroMesa).ToListAsync();
+            return View("FrmPedidosSalon", mesas);
         }
     }
 
