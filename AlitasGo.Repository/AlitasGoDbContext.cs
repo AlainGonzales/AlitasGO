@@ -210,20 +210,18 @@ namespace AlitasGo.Repository
                 new Producto { ProductoId = 6, CategoriaId = 2, Codigo = "BEB-CER", Nombre = "Cerveza 620ml", Descripcion = "Cerveza rubia 620ml", PrecioUnitario = 9.00m, RequiereSabor = false, Activo = true }
             );
 
-            // ── Insumos ─────────────────────────────────────────────────────────
+            // ── Insumos (Stock amplio y completo para todas las categorías) ───────
             modelBuilder.Entity<Insumo>().HasData(
-                new Insumo { InsumoId = 1, CodigoInsumo = "INS-ALITA", Nombre = "Alita de pollo", UnidadMedida = "Unidades", StockActual = 200.00m, StockMinimo = 30.00m, CostoUnitario = 1.5000m },
-                new Insumo { InsumoId = 2, CodigoInsumo = "INS-SAL-BBQ", Nombre = "Salsa BBQ", UnidadMedida = "Mililitros", StockActual = 5000.00m, StockMinimo = 500.00m, CostoUnitario = 0.0200m },
-                new Insumo { InsumoId = 3, CodigoInsumo = "INS-SAL-BUF", Nombre = "Salsa Buffalo", UnidadMedida = "Mililitros", StockActual = 4000.00m, StockMinimo = 500.00m, CostoUnitario = 0.0250m },
-                new Insumo { InsumoId = 4, CodigoInsumo = "INS-SAL-ACE", Nombre = "Salsa Acevichada", UnidadMedida = "Mililitros", StockActual = 3000.00m, StockMinimo = 400.00m, CostoUnitario = 0.0300m },
-                new Insumo { InsumoId = 5, CodigoInsumo = "INS-PAPA", Nombre = "Papa", UnidadMedida = "Gramos", StockActual = 10000.00m, StockMinimo = 2000.00m, CostoUnitario = 0.0030m }
+                new Insumo { InsumoId = 1, CodigoInsumo = "INS-ALITA", Nombre = "Alita de pollo", UnidadMedida = "Unidades", StockActual = 15000.00m, StockMinimo = 100.00m, CostoUnitario = 1.5000m },
+                new Insumo { InsumoId = 2, CodigoInsumo = "INS-SAL-BBQ", Nombre = "Salsa BBQ", UnidadMedida = "Mililitros", StockActual = 50000.00m, StockMinimo = 1000.00m, CostoUnitario = 0.0200m },
+                new Insumo { InsumoId = 3, CodigoInsumo = "INS-SAL-BUF", Nombre = "Salsa Buffalo", UnidadMedida = "Mililitros", StockActual = 40000.00m, StockMinimo = 1000.00m, CostoUnitario = 0.0250m },
+                new Insumo { InsumoId = 4, CodigoInsumo = "INS-SAL-ACE", Nombre = "Salsa Acevichada", UnidadMedida = "Mililitros", StockActual = 30000.00m, StockMinimo = 800.00m, CostoUnitario = 0.0300m },
+                new Insumo { InsumoId = 5, CodigoInsumo = "INS-PAPA", Nombre = "Papa", UnidadMedida = "Gramos", StockActual = 80000.00m, StockMinimo = 5000.00m, CostoUnitario = 0.0030m },
+                new Insumo { InsumoId = 6, CodigoInsumo = "INS-GAS-500", Nombre = "Botella Gaseosa 500ml", UnidadMedida = "Unidades", StockActual = 1000.00m, StockMinimo = 24.00m, CostoUnitario = 2.5000m },
+                new Insumo { InsumoId = 7, CodigoInsumo = "INS-CER-620", Nombre = "Botella Cerveza 620ml", UnidadMedida = "Unidades", StockActual = 500.00m, StockMinimo = 24.00m, CostoUnitario = 5.0000m }
             );
 
-            // ── Recetas (N:M Producto ↔ Insumo) ────────────────────────────────
-            // ALT-06 (6 alitas): 6 alitas + 60ml de salsa (BBQ por defecto como base)
-            // ALT-12 (12 alitas): 12 alitas + 80ml de salsa
-            // ALT-20 (20 alitas): 20 alitas + 120ml de salsa
-            // PAP-FRI: 200g de papa
+            // ── Recetas (N:M Producto ↔ Insumo) ──────────────────────────────────
             modelBuilder.Entity<RecetaProducto>().HasData(
                 // Alitas x6
                 new RecetaProducto { RecetaId = 1, ProductoId = 1, InsumoId = 1, CantidadRequerida = 6.0000m },
@@ -235,7 +233,10 @@ namespace AlitasGo.Repository
                 new RecetaProducto { RecetaId = 5, ProductoId = 3, InsumoId = 1, CantidadRequerida = 20.0000m },
                 new RecetaProducto { RecetaId = 6, ProductoId = 3, InsumoId = 2, CantidadRequerida = 120.0000m },
                 // Papas fritas
-                new RecetaProducto { RecetaId = 7, ProductoId = 4, InsumoId = 5, CantidadRequerida = 200.0000m }
+                new RecetaProducto { RecetaId = 7, ProductoId = 4, InsumoId = 5, CantidadRequerida = 200.0000m },
+                // Bebidas (Relación 1 a 1 de inventario)
+                new RecetaProducto { RecetaId = 8, ProductoId = 5, InsumoId = 6, CantidadRequerida = 1.0000m },
+                new RecetaProducto { RecetaId = 9, ProductoId = 6, InsumoId = 7, CantidadRequerida = 1.0000m }
             );
         }
     }

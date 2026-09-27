@@ -1,0 +1,9 @@
+﻿Drop-Database -Confirm:$false
+
+Add-Migration MigracionInicialAlitasGo -StartupProject AlitasGo.Web
+
+Update-Database -StartupProject AlitasGo.Web
+
+dotnet ef database drop --project AlitasGo.Repository --startup-project AlitasGo.Web --force
+dotnet ef migrations add MigracionInicialAlitasGo --project AlitasGo.Repository --startup-project AlitasGo.Web
+dotnet ef database update --project AlitasGo.Repository --startup-project AlitasGo.Web

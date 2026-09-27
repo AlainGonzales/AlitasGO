@@ -202,8 +202,8 @@ namespace AlitasGo.Repository.Migrations
                             CodigoInsumo = "INS-ALITA",
                             CostoUnitario = 1.5000m,
                             Nombre = "Alita de pollo",
-                            StockActual = 200.00m,
-                            StockMinimo = 30.00m,
+                            StockActual = 15000.00m,
+                            StockMinimo = 100.00m,
                             UnidadMedida = "Unidades"
                         },
                         new
@@ -212,8 +212,8 @@ namespace AlitasGo.Repository.Migrations
                             CodigoInsumo = "INS-SAL-BBQ",
                             CostoUnitario = 0.0200m,
                             Nombre = "Salsa BBQ",
-                            StockActual = 5000.00m,
-                            StockMinimo = 500.00m,
+                            StockActual = 50000.00m,
+                            StockMinimo = 1000.00m,
                             UnidadMedida = "Mililitros"
                         },
                         new
@@ -222,8 +222,8 @@ namespace AlitasGo.Repository.Migrations
                             CodigoInsumo = "INS-SAL-BUF",
                             CostoUnitario = 0.0250m,
                             Nombre = "Salsa Buffalo",
-                            StockActual = 4000.00m,
-                            StockMinimo = 500.00m,
+                            StockActual = 40000.00m,
+                            StockMinimo = 1000.00m,
                             UnidadMedida = "Mililitros"
                         },
                         new
@@ -232,8 +232,8 @@ namespace AlitasGo.Repository.Migrations
                             CodigoInsumo = "INS-SAL-ACE",
                             CostoUnitario = 0.0300m,
                             Nombre = "Salsa Acevichada",
-                            StockActual = 3000.00m,
-                            StockMinimo = 400.00m,
+                            StockActual = 30000.00m,
+                            StockMinimo = 800.00m,
                             UnidadMedida = "Mililitros"
                         },
                         new
@@ -242,9 +242,29 @@ namespace AlitasGo.Repository.Migrations
                             CodigoInsumo = "INS-PAPA",
                             CostoUnitario = 0.0030m,
                             Nombre = "Papa",
-                            StockActual = 10000.00m,
-                            StockMinimo = 2000.00m,
+                            StockActual = 80000.00m,
+                            StockMinimo = 5000.00m,
                             UnidadMedida = "Gramos"
+                        },
+                        new
+                        {
+                            InsumoId = 6,
+                            CodigoInsumo = "INS-GAS-500",
+                            CostoUnitario = 2.5000m,
+                            Nombre = "Botella Gaseosa 500ml",
+                            StockActual = 1000.00m,
+                            StockMinimo = 24.00m,
+                            UnidadMedida = "Unidades"
+                        },
+                        new
+                        {
+                            InsumoId = 7,
+                            CodigoInsumo = "INS-CER-620",
+                            CostoUnitario = 5.0000m,
+                            Nombre = "Botella Cerveza 620ml",
+                            StockActual = 500.00m,
+                            StockMinimo = 24.00m,
+                            UnidadMedida = "Unidades"
                         });
                 });
 
@@ -657,6 +677,20 @@ namespace AlitasGo.Repository.Migrations
                             CantidadRequerida = 200.0000m,
                             InsumoId = 5,
                             ProductoId = 4
+                        },
+                        new
+                        {
+                            RecetaId = 8,
+                            CantidadRequerida = 1.0000m,
+                            InsumoId = 6,
+                            ProductoId = 5
+                        },
+                        new
+                        {
+                            RecetaId = 9,
+                            CantidadRequerida = 1.0000m,
+                            InsumoId = 7,
+                            ProductoId = 6
                         });
                 });
 

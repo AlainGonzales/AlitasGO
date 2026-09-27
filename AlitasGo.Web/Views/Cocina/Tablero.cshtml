@@ -1,39 +1,70 @@
-﻿@{
+﻿@model IEnumerable<AlitasGo.Domain.DTOs.PedidoResumenDto>
+@{
     ViewData["Title"] = "Monitor de Comandas - Cocina en Vivo";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="container-fluid mt-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- TÍTULO ARRIBA -->
+    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
         <div>
             <h2 class="fw-bold mb-0 text-dark">
-                🍗 Tablero de Cocina <span class="badge bg-danger fs-6" id="badgeEstadoSocket">Conectando...</span>
+                🍗 Tablero de Cocina <span class="badge bg-success fs-6" id="badgeEstadoSocket">🟢 En Vivo (Conectado)</span>
             </h2>
             <small class="text-muted">Recepción en tiempo real de órdenes de salón</small>
         </div>
-        <div>
-            <!-- Botón de prueba para disparar comanda en vivo -->
-            <button id="btnSimular" class="btn btn-warning fw-bold shadow-sm">
-                ⚡ Simular Pedido Entrante
-            </button>
-        </div>
     </div>
 
-    <!-- Contenedor donde aparecerán las tarjetas de pedidos -->
+    <!-- CONTENEDOR DE TARJETAS -->
     <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-3" id="contenedorComandas">
-        <!-- Las órdenes se insertan dinámicamente aquí vía SignalR -->
+        @if (Model != null)
+        {
+            foreach (var pedido in Model.Where(p => p.Estado == "EnCocina" || p.Estado == "Pendiente"))
+            {
+                <div class="col" id="tarjeta-pedido-@pedido.PedidoId">
+                    <div class="card shadow-sm border-warning h-100" style="border-width: 2px;">
+                        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                            <span class="fs-5 fw-bold">MESA @pedido.NumeroMesa</span>
+                            <span class="badge bg-warning text-dark badge-estado">@pedido.Estado</span>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="small text-muted mb-2">Orden: @pedido.CodigoPedido</div>
+                            <ul class="list-group list-group-flush mb-3">
+                                @foreach (var it in pedido.Items)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-start px-2 py-1">
+                                        <div class="ms-2 me-auto">
+                                            <div class="fw-bold">@it.Cantidad x @it.NombreProducto</div>
+                                            @if (!string.IsNullOrEmpty(it.SaborSalsa))
+                                            {
+                                                <span class="badge bg-danger text-wrap">@it.SaborSalsa</span>
+                                            }
+                                            @if (!string.IsNullOrEmpty(it.NotasCocina))
+                                            {
+                                                <div class="small text-muted italic">Nota: @it.NotasCocina</div>
+                                            }
+                                        </div>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                        <div class="card-footer bg-white d-grid gap-2 border-0">
+                            <button class="btn btn-outline-success btn-sm fw-bold" onclick="marcarListo(@pedido.PedidoId, @pedido.NumeroMesa)">
+                                ✓ Despachar / Marcar como Listo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
     </div>
 </div>
 
-<!-- Audio para alerta de nueva comanda (beep / campana de cocina) -->
 <audio id="alertaSonido" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
 @section Scripts {
-    <!-- CDN oficial de SignalR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-
     <script>
-        // 1. Inicializar conexión al Hub
         const conexion = new signalR.HubConnectionBuilder()
             .withUrl("/hubs/cocina")
             .withAutomaticReconnect()
@@ -43,95 +74,92 @@
         const contenedor = document.getElementById("contenedorComandas");
         const audio = document.getElementById("alertaSonido");
 
-        // 2. Escuchar evento: 'RecibirNuevoPedido'
-        conexion.on("RecibirNuevoPedido", function (pedido) {
-            // Reproducir sonido de comanda
-            audio.play().catch(e => console.log("Audio en espera de interacción previa:", e));
-
-            // Renderizar la tarjeta del pedido
+        function procesarPedidoEntrante(pedido) {
+            if (audio) audio.play().catch(() => {});
             renderizarTarjetaPedido(pedido);
-        });
+        }
 
-        // 3. Escuchar evento: 'EstadoPedidoActualizado'
-        conexion.on("EstadoPedidoActualizado", function (pedidoId, nuevoEstado) {
+        conexion.on("NuevoPedidoRegistrado", procesarPedidoEntrante);
+
+        // Si otro dispositivo lo marcó listo, se quita del tablero
+        conexion.on("EstadoPedidoActualizado", function (pedidoId) {
             const tarjeta = document.getElementById(`tarjeta-pedido-${pedidoId}`);
-            if (tarjeta) {
-                if (nuevoEstado === "Listo") {
-                    tarjeta.classList.remove("border-warning");
-                    tarjeta.classList.add("border-success");
-                    const badge = tarjeta.querySelector(".badge-estado");
-                    badge.className = "badge bg-success badge-estado";
-                    badge.innerText = "¡LISTO PARA SERVIR!";
-                } else if (nuevoEstado === "Entregado") {
-                    tarjeta.remove();
-                }
-            }
+            if (tarjeta) tarjeta.remove();
         });
 
-        // 4. Iniciar la conexión WebSocket
-        conexion.start()
-            .then(function () {
-                badgeEstado.className = "badge bg-success fs-6";
-                badgeEstado.innerText = "🟢 En Vivo (Conectado)";
-            })
-            .catch(function (err) {
-                badgeEstado.className = "badge bg-danger fs-6";
-                badgeEstado.innerText = "🔴 Desconectado";
-                console.error(err.toString());
-            });
+        conexion.start().catch(err => console.error(err));
 
-        // Función para pintar la tarjeta de comanda en el HTML
         function renderizarTarjetaPedido(pedido) {
+            if (!pedido) return;
+
+            const id = pedido.pedidoId ?? pedido.PedidoId;
+
+            // FILTRO ANTI-DUPLICADOS: Si la tarjeta ya está en pantalla, no la volvemos a pintar
+            if (document.getElementById(`tarjeta-pedido-${id}`)) {
+                return;
+            }
+
+            const numeroMesa = pedido.numeroMesa ?? pedido.NumeroMesa ?? "?";
+            const estado = pedido.estado ?? pedido.Estado ?? "EnCocina";
+            const codigo = pedido.codigoPedido ?? pedido.CodigoPedido ?? "";
+            const items = pedido.items ?? pedido.Items ?? [];
+
             let itemsHtml = "";
-            pedido.items.forEach(it => {
+            items.forEach(it => {
                 itemsHtml += `
                     <li class="list-group-item d-flex justify-content-between align-items-start px-2 py-1">
                         <div class="ms-2 me-auto">
-                            <div class="fw-bold">${it.cantidad}x ${it.nombreProducto}</div>
-                            ${it.saborSalsa ? `<span class="badge bg-danger text-wrap">${it.saborSalsa}</span>` : ''}
-                            ${it.notasCocina ? `<div class="small text-muted italic">Nota: ${it.notasCocina}</div>` : ''}
+                            <div class="fw-bold">${it.cantidad ?? it.Cantidad}x ${it.nombreProducto ?? it.NombreProducto}</div>
+                            ${(it.saborSalsa ?? it.SaborSalsa) ? `<span class="badge bg-danger">${it.saborSalsa ?? it.SaborSalsa}</span>` : ''}
+                            ${(it.notasCocina ?? it.NotasCocina) ? `<div class="small text-muted italic">Nota: ${it.notasCocina ?? it.NotasCocina}</div>` : ''}
                         </div>
                     </li>
                 `;
             });
 
             const cardHtml = `
-                <div class="col" id="tarjeta-pedido-${pedido.pedidoId}">
+                <div class="col" id="tarjeta-pedido-${id}">
                     <div class="card shadow-sm border-warning h-100" style="border-width: 2px;">
                         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                            <span class="fs-5 fw-bold">MESA ${pedido.numeroMesa}</span>
-                            <span class="badge bg-warning text-dark badge-estado">${pedido.estado}</span>
+                            <span class="fs-5 fw-bold">MESA ${numeroMesa}</span>
+                            <span class="badge bg-warning text-dark">${estado}</span>
                         </div>
                         <div class="card-body p-2">
-                            <div class="small text-muted mb-2">Orden: ${pedido.codigoPedido}</div>
-                            <ul class="list-group list-group-flush mb-3">
-                                ${itemsHtml}
-                            </ul>
+                            <div class="small text-muted mb-2">Orden: ${codigo}</div>
+                            <ul class="list-group list-group-flush mb-3">${itemsHtml}</ul>
                         </div>
                         <div class="card-footer bg-white d-grid gap-2 border-0">
-                            <button class="btn btn-outline-success btn-sm fw-bold" onclick="marcarListo(${pedido.pedidoId})">
-                                ✓ Marcar como Listo
+                            <button class="btn btn-outline-success btn-sm fw-bold" onclick="marcarListo(${id}, ${numeroMesa})">
+                                ✓ Despachar / Marcar como Listo
                             </button>
                         </div>
                     </div>
                 </div>
             `;
-
             contenedor.insertAdjacentHTML('afterbegin', cardHtml);
         }
 
-        // Función que invoca el Hub desde el cliente
-        function marcarListo(pedidoId) {
-            conexion.invoke("CambiarEstadoPedido", pedidoId, "Listo")
-                .catch(err => console.error(err.toString()));
-        }
+        async function marcarListo(pedidoId, mesaId) {
+            try {
+                const res = await fetch('/Pedidos/CambiarEstado', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pedidoId: pedidoId, nuevoEstado: "Listo" })
+                });
 
-        // Botón de prueba rápida
-        document.getElementById("btnSimular").addEventListener("click", function () {
-            fetch('/Cocina/SimularNuevoPedido', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-        });
+                if (res.ok) {
+                    // Notifica a los demás por SignalR
+                    await conexion.invoke("CambiarEstadoPedido", pedidoId, "Listo", mesaId);
+
+                    // Remueve la tarjeta de cocina
+                    const tarjeta = document.getElementById(`tarjeta-pedido-${pedidoId}`);
+                    if (tarjeta) tarjeta.remove();
+                } else {
+                    console.error("Error al actualizar estado en servidor");
+                }
+            } catch (err) {
+                console.error("Error en marcarListo:", err);
+            }
+        }
     </script>
 }

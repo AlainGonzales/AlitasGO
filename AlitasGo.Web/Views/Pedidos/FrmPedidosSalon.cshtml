@@ -3,44 +3,34 @@
     ViewData["Title"] = "Gestión de Salón y Pedidos";
 }
 
-<div class="container-fluid py-3">
+<div class="container-fluid mt-3">
     <div class="row">
-        <!-- Panel Izquierdo: Mapa de Mesas -->
-        <div class="col-lg-7 mb-4">
+        <!-- Panel Izquierdo: Salón de Mesas -->
+        <div class="col-md-7">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-grid-fill me-2"></i>Salón de Mesas</h5>
-                    <div class="small">
-                        <span class="badge bg-success me-2">Libre</span>
-                        <span class="badge bg-danger">Ocupada</span>
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
+                    <h5 class="mb-0 fw-bold">🪑 Salón de Mesas</h5>
+                    <div class="d-flex gap-1">
+                        <span class="badge bg-success">Libre</span>
+                        <span class="badge bg-danger">En Cocina</span>
+                        <span class="badge bg-warning text-dark">Atendida</span>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3" id="contenedorMesas">
-                        @if (Model != null && Model.Any())
+                <div class="card-body bg-light">
+                    <div class="row g-3" id="rejillaMesas">
+                        @foreach (var mesa in Model)
                         {
-                            foreach (var mesa in Model)
-                            {
-                                var claseEstado = mesa.Estado == "Libre" ? "btn-outline-success" : "btn-outline-danger";
-                                var badgeEstado = mesa.Estado == "Libre" ? "bg-success" : "bg-danger";
-                                <div class="col-6 col-sm-4 col-md-3">
-                                    <button type="button" 
-                                            class="btn @claseEstado w-100 p-3 text-center position-relative shadow-sm tarjeta-mesa" 
-                                            onclick="seleccionarMesa(@mesa.MesaId, @mesa.NumeroMesa, '@mesa.Estado')">
-                                        <i class="bi bi-shop fs-1 d-block mb-1"></i>
-                                        <strong>Mesa @mesa.NumeroMesa</strong>
-                                        <div class="small text-muted">Cap: @mesa.Capacidad pers.</div>
-                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill @badgeEstado">
-                                            @mesa.Estado
-                                        </span>
-                                    </button>
+                            var claseMesa = mesa.Estado == "Disponible" ? "mesa-disponible" : (mesa.Estado == "Listo" ? "mesa-atendida" : "mesa-ocupada");
+                            var claseBadge = mesa.Estado == "Disponible" ? "badge-mesa-disponible" : (mesa.Estado == "Listo" ? "badge-mesa-atendida" : "badge-mesa-ocupada");
+
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <div class="card card-mesa text-center p-2 shadow-sm @claseMesa" id="card-mesa-@mesa.MesaId" onclick="clickMesa(@mesa.MesaId, '@mesa.NumeroMesa')">
+                                    <div class="d-flex justify-content-end">
+                                        <span class="badge @claseBadge mb-1 badge-mesa" id="badge-mesa-@mesa.MesaId">@mesa.Estado</span>
+                                    </div>
+                                    <h5 class="fw-bold mesa-title mb-0">Mesa @mesa.NumeroMesa</h5>
+                                    <small class="text-muted">Cap: @mesa.Capacidad pers.</small>
                                 </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="col-12 text-center text-muted py-4">
-                                No hay mesas registradas en el sistema.
                             </div>
                         }
                     </div>
@@ -48,93 +38,79 @@
             </div>
         </div>
 
-        <!-- Panel Derecho: Comanda del Pedido Activo -->
-        <div class="col-lg-5">
-            <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Comanda Actual</h5>
-                    <span class="badge bg-light text-dark fs-6" id="labelMesaSeleccionada">Mesa: Sin elegir</span>
+        <!-- Panel Derecho: Comanda Actual -->
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center py-2">
+                    <h5 class="mb-0 fw-bold">📝 Comanda Actual</h5>
+                    <span class="badge bg-white text-danger fw-bold" id="lblMesaSeleccionada">Mesa: Ninguna</span>
                 </div>
                 <div class="card-body">
+                    <!-- Botonera de comanda -->
                     <div class="d-flex justify-content-between mb-3">
-                        <button class="btn btn-warning fw-bold" id="btnAbrirModalItem" onclick="abrirModalAgregar()" disabled>
-                            <i class="bi bi-plus-circle me-1"></i> Agregar Alitas / Item
+                        <button class="btn btn-warning fw-bold text-dark shadow-sm" id="btnAgregarItem" onclick="abrirModalAgregar()" disabled>
+                            ➕ Agregar Alitas / Item
                         </button>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="limpiarComanda()">
-                            Limpiar
-                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" id="btnLimpiar" onclick="limpiarComanda()">Limpiar</button>
                     </div>
 
-                    <!-- Tabla de Detalle -->
-                    <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
-                        <table class="table table-sm align-middle table-hover">
+                    <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                        <table class="table table-sm table-hover align-middle" id="tblComanda">
                             <thead class="table-light">
                                 <tr>
                                     <th>Cant</th>
                                     <th>Descripción / Salsa</th>
-                                    <th class="text-end">P.Unit</th>
-                                    <th class="text-end">Importe</th>
+                                    <th>P.Unit</th>
+                                    <th>Importe</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody id="cuerpoTablaPedido">
-                                <tr id="filaVacia">
-                                    <td colspan="5" class="text-center text-muted py-4">
-                                        Selecciona una mesa y agrega productos a la comanda.
-                                    </td>
-                                </tr>
+                                <tr id="filaVacia"><td colspan="5" class="text-center text-muted py-4">Selecciona una mesa libre y agrega productos.</td></tr>
                             </tbody>
                         </table>
                     </div>
 
-                    <!-- Totales (Desglose IGV 18%) -->
-                    <div class="border-top pt-3 mt-2">
-                        <div class="d-flex justify-content-between text-muted mb-1">
-                            <span>Subtotal (Base Imponible):</span>
-                            <span id="txtSubTotal">S/. 0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between text-muted mb-2">
-                            <span>I.G.V. (18%):</span>
-                            <span id="txtIgv">S/. 0.00</span>
-                        </div>
-                        <div class="d-flex justify-content-between fs-5 fw-bold text-dark border-top pt-2">
-                            <span>Total a Pagar:</span>
-                            <span class="text-success" id="txtTotal">S/. 0.00</span>
-                        </div>
-                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between text-muted mb-1"><label>Subtotal (Base Imponible):</label><span id="lblSubtotal">S/. 0.00</span></div>
+                    <div class="d-flex justify-content-between text-muted mb-1"><label>I.G.V. (18%):</label><span id="lblIgv">S/. 0.00</span></div>
+                    <div class="d-flex justify-content-between fs-4 fw-bold text-success border-top pt-2"><label>Total a Pagar:</label><span id="lblTotal">S/. 0.00</span></div>
 
-                    <!-- Botón Enviar a Cocina -->
-                    <div class="mt-4">
-                        <button class="btn btn-success w-100 py-2 fs-5 fw-bold shadow-sm" id="btnEnviarComanda" onclick="confirmarYEnviarPedido()" disabled>
-                            <i class="bi bi-fire me-2"></i> Enviar a Cocina
-                        </button>
-                    </div>
+                    <button class="btn btn-success w-100 mt-3 py-2 fw-bold shadow-sm" id="btnEnviarCocina" onclick="confirmarYEnviarPedido()" disabled>
+                        🚀 Enviar a Cocina
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal para Seleccionar Producto, Sabor y Cantidad -->
-<div class="modal fade" id="modalProducto" tabindex="-1" aria-hidden="true">
+<!-- MODAL PARA AGREGAR PRODUCTO -->
+<div class="modal fade" id="modalProducto" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content border-0 shadow">
             <div class="modal-header bg-warning">
-                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-box-seam me-2"></i>Detalle de Porción</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <h5 class="modal-title fw-bold text-dark">🍗 Agregar Producto a Comanda</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="formAgregarItem">
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Porción de Alitas</label>
-                        <select class="form-select" id="selProducto" required>
-                            <option value="1" data-precio="18.00">Alitas x 6 Piezas - S/. 18.00</option>
-                            <option value="2" data-precio="32.00">Alitas x 12 Piezas - S/. 32.00</option>
-                            <option value="3" data-precio="48.00">Alitas x 18 Piezas - S/. 48.00</option>
+                        <label class="form-label fw-bold">Producto</label>
+                        <select class="form-select" id="selProducto" required onchange="cambiarProductoModal()">
+                            @if (ViewBag.Productos != null)
+                            {
+                                foreach (var prod in (IEnumerable<AlitasGo.Domain.Entities.Producto>)ViewBag.Productos)
+                                {
+                                    <option value="@prod.ProductoId" data-precio="@prod.PrecioUnitario" data-requiere-sabor="@prod.RequiereSabor.ToString().ToLower()">
+                                        @prod.Nombre - S/. @prod.PrecioUnitario.ToString("N2")
+                                    </option>
+                                }
+                            }
                         </select>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3" id="divSalsaContainer">
                         <label class="form-label fw-bold">Sabor / Salsa</label>
                         <select class="form-select" id="selSalsa">
                             <option value="BBQ Clásica">BBQ Clásica</option>
@@ -148,28 +124,347 @@
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="form-label fw-bold">Cantidad</label>
-                            <input type="number" class="form-control" id="numCantidad" min="1" max="20" value="1" required>
+                            <input type="number" class="form-control" id="numCantidad" min="1" max="50" value="1" required>
                         </div>
                         <div class="col-6">
                             <label class="form-label fw-bold">Precio Unitario</label>
-                            <input type="text" class="form-control" id="txtPrecioUnitario" value="S/. 18.00" readonly>
+                            <input type="text" class="form-control bg-light" id="txtPrecioUnitario" value="S/. 0.00" readonly>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Notas para Cocina (opcional)</label>
+                        <label class="form-label fw-bold">Notas para Cocina (opcional)</label>
                         <input type="text" class="form-control" id="txtNotasCocina" placeholder="Ej: Salsa aparte, bien crujientes">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary fw-bold" onclick="agregarItemAComanda()">Agregar a Comanda</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning fw-bold text-dark" onclick="agregarItemAComanda()">Agregar a Comanda</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL VISUALIZADOR DE MESA OCUPADA / ATENDIDA -->
+<div class="modal fade" id="modalDetalleMesa" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold" id="modalMesaTitulo">Detalle de Mesa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between mb-3 align-items-center">
+                    <span class="text-muted fw-bold" id="modalCodigoPedido">Orden: -</span>
+                    <span class="badge" id="modalEstadoPedido">-</span>
+                </div>
+                <ul class="list-group mb-3" id="modalListaItems"></ul>
+
+                <div class="border-top pt-2">
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Subtotal:</span>
+                        <span id="modalSubtotal">S/. 0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>I.G.V. (18%):</span>
+                        <span id="modalIgv">S/. 0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between fs-4 fw-bold text-success border-top mt-1 pt-1">
+                        <span>Total Consumido:</span>
+                        <span id="modalTotalPagar">S/. 0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-danger fw-bold shadow-sm" id="btnLiberarMesaAccion">
+                    🧹 Liberar Mesa (Desocupar)
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="~/js/pedidos-salon.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        let mesaActualId = 0;
+        let numeroMesaActual = "";
+        let itemsComanda = [];
+        let modalDetalleBS = null;
+        let modalProductoBS = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            modalDetalleBS = new bootstrap.Modal(document.getElementById('modalDetalleMesa'));
+            modalProductoBS = new bootstrap.Modal(document.getElementById('modalProducto'));
+            cambiarProductoModal();
+        });
+
+        const conexionSalon = new signalR.HubConnectionBuilder()
+            .withUrl("/hubs/cocina")
+            .withAutomaticReconnect()
+            .build();
+
+        conexionSalon.on("EstadoPedidoActualizado", function (pedidoId, nuevoEstado, mesaId) {
+            if (nuevoEstado === "Listo") {
+                pintarMesa(mesaId, "Listo");
+            }
+        });
+
+        conexionSalon.on("MesaLiberada", function (mesaId) {
+            pintarMesa(mesaId, "Disponible");
+        });
+
+        conexionSalon.on("MesaOcupada", function (mesaId) {
+            pintarMesa(mesaId, "EnCocina");
+        });
+
+        conexionSalon.start().catch(console.error);
+
+        function pintarMesa(mesaId, estado) {
+            const card = document.getElementById(`card-mesa-${mesaId}`);
+            const badge = document.getElementById(`badge-mesa-${mesaId}`);
+            if (!card || !badge) return;
+
+            card.classList.remove("mesa-disponible", "mesa-ocupada", "mesa-atendida");
+            badge.classList.remove("badge-mesa-disponible", "badge-mesa-ocupada", "badge-mesa-atendida");
+
+            if (estado === "Disponible") {
+                card.classList.add("mesa-disponible");
+                badge.classList.add("badge-mesa-disponible");
+                badge.innerText = "Disponible";
+            } else if (estado === "Listo" || estado === "Atendida") {
+                card.classList.add("mesa-atendida");
+                badge.classList.add("badge-mesa-atendida");
+                badge.innerText = "Atendida";
+            } else {
+                card.classList.add("mesa-ocupada");
+                badge.classList.add("badge-mesa-ocupada");
+                badge.innerText = "En Cocina";
+            }
+        }
+
+        async function clickMesa(id, num) {
+            const badge = document.getElementById(`badge-mesa-${id}`);
+            const estado = badge ? badge.innerText.trim() : "Disponible";
+
+            if (estado === "Disponible") {
+                mesaActualId = id;
+                numeroMesaActual = num;
+                document.getElementById("lblMesaSeleccionada").innerText = `Mesa: ${num} (Seleccionada)`;
+                document.getElementById("btnAgregarItem").disabled = false;
+                actualizarBotonesEnvio();
+            } else {
+                abrirVisorMesa(id, num, estado);
+            }
+        }
+
+        function cambiarProductoModal() {
+            const sel = document.getElementById('selProducto');
+            if (!sel || sel.selectedIndex < 0 || sel.options.length === 0) return;
+        
+            const opt = sel.options[sel.selectedIndex];
+            if (!opt) return;
+
+            const precio = parseFloat(opt.getAttribute('data-precio') || 0);
+            const requiereSabor = opt.getAttribute('data-requiere-sabor') === 'true';
+
+            const txtPrecio = document.getElementById('txtPrecioUnitario');
+            if (txtPrecio) txtPrecio.value = `S/. ${precio.toFixed(2)}`;
+
+            const divSalsa = document.getElementById('divSalsaContainer');
+            if (divSalsa) {
+                divSalsa.style.display = requiereSabor ? 'block' : 'none';
+            }
+        }
+
+        function abrirModalAgregar() {
+            if (!mesaActualId) {
+                alert("Selecciona primero una mesa disponible.");
+                return;
+            }
+            document.getElementById('numCantidad').value = 1;
+            document.getElementById('txtNotasCocina').value = '';
+            cambiarProductoModal();
+            modalProductoBS.show();
+        }
+
+        function agregarItemAComanda() {
+            const sel = document.getElementById('selProducto');
+            const opt = sel.options[sel.selectedIndex];
+            const productoId = parseInt(sel.value);
+            const nombreProducto = opt.text.split(' - ')[0];
+            const precioUnitario = parseFloat(opt.getAttribute('data-precio'));
+            const requiereSabor = opt.getAttribute('data-requiere-sabor') === 'true';
+            const salsa = requiereSabor ? document.getElementById('selSalsa').value : null;
+            const cantidad = parseInt(document.getElementById('numCantidad').value);
+            const notas = document.getElementById('txtNotasCocina').value.trim();
+
+            if (isNaN(cantidad) || cantidad <= 0) {
+                alert("Ingrese una cantidad válida.");
+                return;
+            }
+
+            itemsComanda.push({
+                productoId: productoId,
+                nombre: nombreProducto,
+                saborSalsa: salsa,
+                cantidad: cantidad,
+                precioUnitario: precioUnitario,
+                importe: Math.round(precioUnitario * cantidad * 100) / 100,
+                notasCocina: notas
+            });
+
+            renderizarComanda();
+            modalProductoBS.hide();
+        }
+
+        function eliminarItem(index) {
+            itemsComanda.splice(index, 1);
+            renderizarComanda();
+        }
+
+        function limpiarComanda() {
+            itemsComanda = [];
+            renderizarComanda();
+        }
+
+        function renderizarComanda() {
+            const tbody = document.getElementById('cuerpoTablaPedido');
+            tbody.innerHTML = '';
+
+            if (itemsComanda.length === 0) {
+                tbody.innerHTML = `<tr id="filaVacia"><td colspan="5" class="text-center text-muted py-4">Selecciona una mesa libre y agrega productos.</td></tr>`;
+                recalcularTotales(0);
+                actualizarBotonesEnvio();
+                return;
+            }
+
+            let total = 0;
+            itemsComanda.forEach((item, idx) => {
+                total += item.importe;
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td class="fw-bold">${item.cantidad}</td>
+                    <td>
+                        <div>${item.nombre}</div>
+                        ${item.saborSalsa ? `<span class="badge bg-danger">${item.saborSalsa}</span>` : ''}
+                        ${item.notasCocina ? `<br><small class="text-muted fst-italic">(${item.notasCocina})</small>` : ''}
+                    </td>
+                    <td>S/. ${item.precioUnitario.toFixed(2)}</td>
+                    <td class="fw-bold">S/. ${item.importe.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="eliminarItem(${idx})">&times;</button>
+                    </td>
+                `;
+                tbody.appendChild(fila);
+            });
+
+            recalcularTotales(total);
+            actualizarBotonesEnvio();
+        }
+
+        function recalcularTotales(total) {
+            const subtotal = Math.round((total / 1.18) * 100) / 100;
+            const igv = Math.round((total - subtotal) * 100) / 100;
+
+            document.getElementById('lblSubtotal').innerText = `S/. ${subtotal.toFixed(2)}`;
+            document.getElementById('lblIgv').innerText = `S/. ${igv.toFixed(2)}`;
+            document.getElementById('lblTotal').innerText = `S/. ${total.toFixed(2)}`;
+        }
+
+        function actualizarBotonesEnvio() {
+            const btn = document.getElementById('btnEnviarCocina');
+            btn.disabled = !(mesaActualId > 0 && itemsComanda.length > 0);
+        }
+
+        async function confirmarYEnviarPedido() {
+            if (!mesaActualId || itemsComanda.length === 0) return;
+
+            const payload = {
+                mesaId: mesaActualId,
+                usuarioId: "MozoSalon",
+                observaciones: `Pedido registrado desde salón para Mesa ${numeroMesaActual}`,
+                detalles: itemsComanda.map(item => ({
+                    productoId: item.productoId,
+                    cantidad: item.cantidad,
+                    saborSalsa: item.saborSalsa,
+                    notasCocina: item.notasCocina
+                }))
+            };
+
+            const btn = document.getElementById('btnEnviarCocina');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Enviando...`;
+
+            try {
+                const respuesta = await fetch('/Pedidos/Registrar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await respuesta.json();
+
+                if (respuesta.ok && data.exito) {
+                    alert(`¡Comanda enviada a cocina con éxito!\nOrden: ${data.pedido.codigoPedido}`);
+                    limpiarComanda();
+                    mesaActualId = 0;
+                    document.getElementById("lblMesaSeleccionada").innerText = "Mesa: Ninguna";
+                    document.getElementById("btnAgregarItem").disabled = true;
+                    pintarMesa(payload.mesaId, "EnCocina");
+                } else {
+                    alert(`No se pudo registrar: ${data.mensaje || 'Error en validación o stock'}`);
+                }
+            } catch (err) {
+                alert("Ocurrió un error al contactar al servidor: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `🚀 Enviar a Cocina`;
+                actualizarBotonesEnvio();
+            }
+        }
+
+        async function abrirVisorMesa(mesaId, numMesa, estado) {
+            document.getElementById("modalMesaTitulo").innerText = `Mesa ${numMesa} - Estado: ${estado}`;
+            const res = await fetch(`/Mesas/DetallePorMesa?mesaId=${mesaId}`);
+            if (!res.ok) return;
+            const data = await res.json();
+
+            document.getElementById("modalCodigoPedido").innerText = `Orden: ${data.codigoPedido}`;
+            const badgeEstado = document.getElementById("modalEstadoPedido");
+            badgeEstado.innerText = data.estado;
+            badgeEstado.className = `badge ${data.estado === 'Listo' ? 'bg-warning text-dark' : 'bg-danger'}`;
+
+            let html = "";
+            data.items.forEach(it => {
+                html += `
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${it.cantidad}x ${it.nombreProducto}</strong>
+                            ${it.saborSalsa ? `<br><small class="text-danger">${it.saborSalsa}</small>` : ''}
+                        </div>
+                        <span class="fw-bold">S/. ${it.importe.toFixed(2)}</span>
+                    </li>
+                `;
+            });
+            document.getElementById("modalListaItems").innerHTML = html;
+            document.getElementById("modalSubtotal").innerText = `S/. ${data.subTotal.toFixed(2)}`;
+            document.getElementById("modalIgv").innerText = `S/. ${data.igv.toFixed(2)}`;
+            document.getElementById("modalTotalPagar").innerText = `S/. ${data.totalPagar.toFixed(2)}`;
+
+            document.getElementById("btnLiberarMesaAccion").onclick = async function () {
+                await fetch('/Mesas/LiberarMesa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(mesaId)
+                });
+                modalDetalleBS.hide();
+                pintarMesa(mesaId, "Disponible");
+            };
+
+            modalDetalleBS.show();
+        }
+    </script>
 }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace AlitasGo.Repository.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class MigracionInicialAlitasGo : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -246,11 +246,13 @@ namespace AlitasGo.Repository.Migrations
                 columns: new[] { "InsumoId", "CodigoInsumo", "CostoUnitario", "Nombre", "StockActual", "StockMinimo", "UnidadMedida" },
                 values: new object[,]
                 {
-                    { 1, "INS-ALITA", 1.5000m, "Alita de pollo", 200.00m, 30.00m, "Unidades" },
-                    { 2, "INS-SAL-BBQ", 0.0200m, "Salsa BBQ", 5000.00m, 500.00m, "Mililitros" },
-                    { 3, "INS-SAL-BUF", 0.0250m, "Salsa Buffalo", 4000.00m, 500.00m, "Mililitros" },
-                    { 4, "INS-SAL-ACE", 0.0300m, "Salsa Acevichada", 3000.00m, 400.00m, "Mililitros" },
-                    { 5, "INS-PAPA", 0.0030m, "Papa", 10000.00m, 2000.00m, "Gramos" }
+                    { 1, "INS-ALITA", 1.5000m, "Alita de pollo", 15000.00m, 100.00m, "Unidades" },
+                    { 2, "INS-SAL-BBQ", 0.0200m, "Salsa BBQ", 50000.00m, 1000.00m, "Mililitros" },
+                    { 3, "INS-SAL-BUF", 0.0250m, "Salsa Buffalo", 40000.00m, 1000.00m, "Mililitros" },
+                    { 4, "INS-SAL-ACE", 0.0300m, "Salsa Acevichada", 30000.00m, 800.00m, "Mililitros" },
+                    { 5, "INS-PAPA", 0.0030m, "Papa", 80000.00m, 5000.00m, "Gramos" },
+                    { 6, "INS-GAS-500", 2.5000m, "Botella Gaseosa 500ml", 1000.00m, 24.00m, "Unidades" },
+                    { 7, "INS-CER-620", 5.0000m, "Botella Cerveza 620ml", 500.00m, 24.00m, "Unidades" }
                 });
 
             migrationBuilder.InsertData(
@@ -294,7 +296,9 @@ namespace AlitasGo.Repository.Migrations
                     { 4, 80.0000m, 2, 2 },
                     { 5, 20.0000m, 1, 3 },
                     { 6, 120.0000m, 2, 3 },
-                    { 7, 200.0000m, 5, 4 }
+                    { 7, 200.0000m, 5, 4 },
+                    { 8, 1.0000m, 6, 5 },
+                    { 9, 1.0000m, 7, 6 }
                 });
 
             migrationBuilder.CreateIndex(

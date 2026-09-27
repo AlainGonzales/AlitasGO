@@ -23,11 +23,13 @@ namespace AlitasGo.Repository
         }
 
         /// <summary>
-        /// Retorna todos los insumos registrados en el sistema.
+        /// Retorna todos los insumos registrados en el sistema incluyendo sus recetas asociadas.
         /// </summary>
         public async Task<IEnumerable<Insumo>> ObtenerTodosAsync()
         {
             return await _context.Insumos
+                .Include(i => i.Recetas) // <-- Carga la colección de recetas
+                .AsNoTracking()
                 .OrderBy(i => i.Nombre)
                 .ToListAsync();
         }

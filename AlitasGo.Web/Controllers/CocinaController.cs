@@ -2,22 +2,30 @@
 using Microsoft.AspNetCore.SignalR;
 using AlitasGo.Web.Hubs;
 using AlitasGo.Domain.DTOs;
+using AlitasGo.Domain.Interfaces;
 
 namespace AlitasGo.Web.Controllers
 {
     public class CocinaController : Controller
     {
         private readonly IHubContext<CocinaHub> _hubContext;
+        private readonly IPedidoService _pedidoService;
 
-        public CocinaController(IHubContext<CocinaHub> hubContext)
+        public CocinaController(
+            IHubContext<CocinaHub> hubContext,
+            IPedidoService pedidoService)
         {
             _hubContext = hubContext;
+            _pedidoService = pedidoService;
         }
 
-        // Vista principal: Monitor de Cocina
-        public IActionResult Tablero()
+        // GET: /Cocina/Tablero
+        // Carga los pedidos que ya están en cola ("EnCocina", "Pendiente", "Listo")
+        [HttpGet]
+        public async Task<IActionResult> Tablero()
         {
-            return View();
+            var comandas = await _pedidoService.ObtenerComandasCocinaAsync();
+            return View(comandas);
         }
 
         // Endpoint para SIMULAR la llegada de una comanda desde el salón/caja
@@ -26,7 +34,6 @@ namespace AlitasGo.Web.Controllers
         {
             if (nuevoPedido == null)
             {
-                // Si no viene nada, generamos una comanda aleatoria de alitas
                 var random = new Random();
                 nuevoPedido = new PedidoResumenDto
                 {
@@ -60,8 +67,8 @@ namespace AlitasGo.Web.Controllers
                 };
             }
 
-            // ¡MAGIA DE SIGNALR!: Se envía a todos los navegadores abiertos en el monitor de cocina
-            await _hubContext.Clients.All.SendAsync("RecibirNuevoPedido", nuevoPedido);
+            // Nombre del evento alineado con PedidosController y la vista
+            await _hubContext.Clients.All.SendAsync("NuevoPedidoRegistrado", nuevoPedido);
 
             return Ok(new { mensaje = "Pedido transmitido a Cocina vía SignalR con éxito", pedido = nuevoPedido });
         }

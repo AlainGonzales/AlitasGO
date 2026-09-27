@@ -30,8 +30,7 @@ namespace AlitasGo.Service.Services
         {
             ValidarDatosPedido(dto);
 
-            // Consolidamos por ProductoId para validar el stock total solicitado incluso
-            // si el mismo producto aparece en más de una línea del pedido.
+            // Consolidamos por ProductoId para validar el stock total solicitado
             var cantidadesPorProducto = dto.Detalles
                 .GroupBy(d => d.ProductoId)
                 .Select(g => new
@@ -54,7 +53,7 @@ namespace AlitasGo.Service.Services
                 }
             }
 
-            // Recupera los productos una sola vez por ID y evita consultas repetidas.
+            // Recupera los productos una sola vez por ID
             var productos = new Dictionary<int, Producto>();
             foreach (var productoId in cantidadesPorProducto.Select(x => x.ProductoId))
             {
@@ -87,22 +86,21 @@ namespace AlitasGo.Service.Services
                         SaborSalsa = detalle.SaborSalsa?.Trim(),
                         NotasCocina = detalle.NotasCocina?.Trim(),
                         PrecioUnitario = producto.PrecioUnitario,
-                        Importe = importe,
-                        Producto = producto
+                        Importe = importe
                     };
                 }).ToList()
             };
 
-            // Requisito del Nivel 4: subtotal + IGV del 18 % + total.
-            pedido.SubTotal = Math.Round(pedido.Detalles.Sum(d => d.Importe), 2);
-            pedido.Igv = Math.Round(pedido.SubTotal * TasaIgv, 2);
-            pedido.TotalPagar = pedido.SubTotal + pedido.Igv;
+            // Cálculo correcto con precios de carta que ya incluyen IGV:
+            var totalComanda = Math.Round(pedido.Detalles.Sum(d => d.Importe), 2);
+            pedido.TotalPagar = totalComanda;
+            pedido.SubTotal = Math.Round(totalComanda / (1.0m + TasaIgv), 2);
+            pedido.Igv = Math.Round(pedido.TotalPagar - pedido.SubTotal, 2);
 
             await _pedidoRepository.CrearPedidoAsync(pedido);
             await _pedidoRepository.GuardarCambiosAsync();
 
-            // Solo se descuenta el inventario después de que el pedido haya sido registrado.
-            // InventarioService vuelve a validar el pedido completo antes de modificar stock.
+            // Descontar inventario
             await _inventarioService.DescontarInsumosPorPedidoAsync(pedido.PedidoId);
 
             return ConvertirAResumen(pedido);
@@ -171,7 +169,6 @@ namespace AlitasGo.Service.Services
 
         private static string GenerarCodigoPedido()
         {
-            // Evita depender del ID de BD antes de guardar y mantiene un código legible.
             return $"PED-{DateTime.UtcNow:yyyyMMdd-HHmmssfff}";
         }
 
